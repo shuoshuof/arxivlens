@@ -26,7 +26,7 @@ python main.py \
 - `--top_retrieve` (default `50`)
 - `--enable_cag` (default `true`)
 - `--ollama_base_url` (default `http://localhost:11434`)
-- `--ollama_model` (default `qwen2.5:7b`)
+- `--ollama_model` (default `qwen2.5:14b`)
 - `--seed` (optional)
 - `--debug`
 
