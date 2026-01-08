@@ -1,0 +1,55 @@
+# Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging / build outputs
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Test / lint / type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.nox/
+.tox/
+.hypothesis/
+
+# Logs
+*.log
+
+# Local env files
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Local data / artifacts
+*.sqlite
+*.db
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# External repo checked out in workspace
+zotero-arxiv-daily/

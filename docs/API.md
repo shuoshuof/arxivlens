@@ -1,0 +1,222 @@
+# API Technical Documentation
+
+This document describes the root-level demo pipeline: overview -> embedding rerank -> optional CAG refinement -> CLI output. It covers every public function, data shape, and scoring formula.
+
+## Data Model
+
+### `paper.ArxivPaper`
+Wrapper around `arxiv.Result` with extra scoring fields.
+
+Properties:
+- `title: str` - Paper title.
+- `summary: str` - Abstract text.
+- `authors: list[str]` - Author names as strings.
+- `arxiv_id: str` - ID without version suffix (e.g., `2401.12345`).
+- `url: str` - Entry URL (abs page).
+- `categories: list[str]` - arXiv categories.
+- `published: datetime | None` - Published timestamp (UTC normalized).
+- `published_date: str | None` - `YYYY-MM-DD` (UTC).
+- `pdf_url: str | None` - PDF URL (derived if missing).
+
+Scoring fields (mutated by pipeline):
+- `score: float | None` - Embedding relevance score (from `recommender.rerank_paper`).
+- `final_score: float | None` - Final score after normalization and optional CAG fusion.
+- `cag_relevant: bool | None` - CAG relevance flag.
+- `cag_fit_score: float | None` - CAG fit score (0-10).
+- `cag_reasons: list[str] | None` - CAG reasons.
+- `cag_action: str | None` - CAG action suggestion.
+- `cag_failed: bool` - True if CAG call failed.
+
+## Pipeline Entry Point
+
+### `main.py`
+CLI entrypoint that orchestrates the full flow.
+
+CLI arguments (also read from env by uppercase name):
+- `--overview_path` (default `overview.md`)
+- `--arxiv_query` (required if `ARXIV_QUERY` not set)
+- `--top_retrieve` (default `50`)
+- `--enable_cag` (default `true`)
+- `--ollama_base_url` (default `http://localhost:11434`)
+- `--ollama_model` (default `qwen2.5:14b`)
+- `--seed` (optional)
+- `--debug` (flag)
+
+Functions:
+
+#### `_str2bool(value: str | bool) -> bool`
+Parses boolean CLI/env values. Accepts `true/1/yes/y` (case-insensitive).
+
+#### `add_argument(*args, **kwargs)`
+Adds an argparse entry and applies environment-variable defaults:
+- For `--foo_bar`, it reads `FOO_BAR` from the environment.
+- If the env var is set, it is cast to the arg `type` and used as the default.
+
+#### `load_overview_as_corpus(overview_path: str) -> tuple[list[dict], str]`
+Reads `overview.md` and returns:
+- `corpus`: a single-item list in the recommender format:
+  ```python
+  [{"data": {"abstractNote": overview_text, "dateAdded": "YYYY-MM-DDTHH:MM:SSZ"}}]
+  ```
+- `overview_text`: raw text used for CAG context.
+
+#### `normalize_scores(scores: list[float]) -> list[float]`
+Min-max normalization:
+- If all scores are equal, returns a list of `1.0`.
+- Else:
+  ```
+  norm_i = (score_i - min_score) / (max_score - min_score)
+  ```
+
+#### `format_paper_line(paper: ArxivPaper, rank: int) -> str`
+Returns a multi-line string for CLI output. Includes:
+- final/embed/fit scores
+- published date + categories
+- title, URL, PDF URL
+- up to 2 CAG reasons + action (if present)
+
+Scoring and filtering (main flow):
+1) `ranked = rerank_paper(candidates, corpus)`
+2) `top_retrieve = ranked[:top_retrieve]`
+3) Normalize embedding scores:
+   ```
+   norm_embed_i = normalize(score_i)
+   final_i = norm_embed_i
+   ```
+4) If CAG enabled:
+   ```
+   final_i = 0.6 * norm_embed_i + 0.4 * (fit_score_i / 10)
+   keep only cag_relevant == True
+   ```
+5) Sort by `final_score` desc, print all.
+
+## arXiv Fetch
+
+### `arxiv_fetcher.get_arxiv_paper(query: str, debug: bool = False) -> list[ArxivPaper]`
+Fetches candidate papers using arXiv RSS + API.
+
+Behavior:
+- RSS: `https://rss.arxiv.org/atom/{query}`
+- Only keeps entries with `arxiv_announce_type == "new"`.
+- Batch fetches metadata by ID (20 per request).
+- Uses `arxiv.Client(num_retries=10, delay_seconds=1)`.
+- Shows progress with `tqdm`.
+- `debug=True`: fetches 5 results from `cat:cs.AI` regardless of RSS.
+
+Exceptions:
+- Raises `ValueError` if the RSS feed reports a query error.
+
+## Embedding Rerank
+
+### `recommender.rerank_paper(candidate, corpus, model="avsolatorio/GIST-small-Embedding-v0")`
+Ranks candidates by similarity to the corpus (overview).
+
+Inputs:
+- `candidate: list[ArxivPaper]`
+- `corpus: list[dict]` where each item is:
+  ```python
+  {"data": {"abstractNote": "<text>", "dateAdded": "YYYY-MM-DDTHH:MM:SSZ"}}
+  ```
+- `model`: SentenceTransformer model name.
+
+Steps:
+1) Encode corpus abstracts and candidate summaries.
+2) Compute similarity matrix:
+   ```
+   sim = encoder.similarity(candidate_embeddings, corpus_embeddings)
+   ```
+3) Time-decay weighting over corpus items:
+   ```
+   w_j = 1 / (1 + log10(j + 1))
+   w = w / sum(w)
+   ```
+   Corpus is sorted newest -> oldest by `dateAdded` before weighting.
+4) Candidate score:
+   ```
+   score_i = 10 * sum_j(sim[i, j] * w_j)
+   ```
+5) Writes `paper.score` and returns candidates sorted by score desc.
+
+Notes:
+- With a single-item corpus (overview), the weight is always 1.
+- `encoder.similarity` uses cosine similarity in SentenceTransformers.
+
+## CAG Refinement (Ollama)
+
+### `cag_refine.cag_refine(overview_text, papers, model, base_url, timeout=90, retries=1)`
+Runs LLM checks on top candidates and attaches structured results.
+
+For each paper:
+1) Builds prompt via `_build_messages`.
+2) Calls `ollama_client.chat_json`.
+3) Normalizes output and sets:
+   - `cag_relevant`
+   - `cag_fit_score`
+   - `cag_reasons`
+   - `cag_action`
+4) On failure:
+   - `cag_failed = True`
+   - `cag_relevant = False`
+   - `cag_fit_score = 0.0`
+   - `cag_reasons = []`
+   - `cag_action = ""`
+
+#### `_build_messages(overview_text: str, paper: ArxivPaper) -> (system, user)`
+System prompt enforces JSON output with keys:
+```
+relevant (bool), fit_score (0-10), reasons (list[str]), action (str)
+```
+User prompt includes overview + paper title/abstract.
+
+#### `_normalize_cag_output(data: dict) -> dict`
+Normalization rules:
+- `relevant`: accepts bool or string (`"true"`, `"1"`, `"yes"`).
+- `fit_score`: cast to float, clamped to `[0, 10]`.
+- `reasons`: string -> list; non-list -> empty list; trim empty strings.
+- `action`: string, trimmed.
+
+## Ollama Client
+
+### `ollama_client.chat_json(model, system, user, base_url="http://localhost:11434", timeout=90, retries=2) -> dict`
+Calls Ollama `/api/chat` and enforces JSON output.
+
+Request payload:
+```json
+{
+  "model": "<model>",
+  "messages": [{"role":"system","content":"..."},{"role":"user","content":"..."}],
+  "stream": false,
+  "format": "json"
+}
+```
+
+Response parsing:
+- Reads `response.json()["message"]["content"]`.
+- Parses JSON; if invalid, tries substring from first `{` to last `}`.
+- On failure, retries by appending a strict "JSON only" message.
+- Raises `RuntimeError` after retries are exhausted.
+
+## Scoring Summary
+
+Embedding relevance:
+```
+score_i = 10 * sum_j(sim[i, j] * w_j)
+w_j = 1 / (1 + log10(j + 1))
+```
+
+Normalization:
+```
+norm_i = (score_i - min(score)) / (max(score) - min(score))
+if all equal -> norm_i = 1.0
+```
+
+Final score:
+- CAG disabled:
+  ```
+  final_i = norm_i
+  ```
+- CAG enabled:
+  ```
+  final_i = 0.6 * norm_i + 0.4 * (fit_score_i / 10)
+  keep only cag_relevant == True
+  ```

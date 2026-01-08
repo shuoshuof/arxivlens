@@ -1,0 +1,87 @@
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from ollama_client import chat_json
+from paper import ArxivPaper
+
+
+def _build_messages(overview_text: str, paper: ArxivPaper) -> tuple[str, str]:
+    system = (
+        "You are a research assistant. Decide whether a candidate paper is relevant to the project "
+        "overview. Return ONLY JSON with keys: relevant (bool), fit_score (0-10 number), "
+        "reasons (list of strings), action (string)."
+    )
+    user = (
+        "Project overview:\n"
+        f"{overview_text}\n\n"
+        "Candidate paper:\n"
+        f"Title: {paper.title}\n"
+        f"Abstract: {paper.summary}\n\n"
+        "Return JSON only."
+    )
+    return system, user
+
+
+def _normalize_cag_output(data: dict[str, Any]) -> dict[str, Any]:
+    relevant = data.get("relevant", False)
+    if isinstance(relevant, str):
+        relevant = relevant.strip().lower() in {"true", "1", "yes"}
+    fit_score = data.get("fit_score", 0)
+    try:
+        fit_score = float(fit_score)
+    except (TypeError, ValueError):
+        fit_score = 0.0
+    fit_score = max(0.0, min(10.0, fit_score))
+
+    reasons = data.get("reasons", [])
+    if isinstance(reasons, str):
+        reasons = [reasons]
+    if not isinstance(reasons, list):
+        reasons = []
+    reasons = [str(r).strip() for r in reasons if str(r).strip()]
+
+    action = data.get("action", "")
+    action = str(action).strip()
+
+    return {
+        "relevant": bool(relevant),
+        "fit_score": fit_score,
+        "reasons": reasons,
+        "action": action,
+    }
+
+
+def cag_refine(
+    overview_text: str,
+    papers: list[ArxivPaper],
+    model: str,
+    base_url: str,
+    timeout: int = 90,
+    retries: int = 1,
+) -> list[ArxivPaper]:
+    for paper in papers:
+        system, user = _build_messages(overview_text, paper)
+        try:
+            data = chat_json(
+                model=model,
+                system=system,
+                user=user,
+                base_url=base_url,
+                timeout=timeout,
+                retries=retries,
+            )
+            normalized = _normalize_cag_output(data)
+            paper.cag_relevant = normalized["relevant"]
+            paper.cag_fit_score = normalized["fit_score"]
+            paper.cag_reasons = normalized["reasons"]
+            paper.cag_action = normalized["action"]
+        except Exception as exc:
+            logging.warning("CAG failed for %s: %s", paper.arxiv_id, exc)
+            paper.cag_failed = True
+            paper.cag_relevant = False
+            paper.cag_fit_score = 0.0
+            paper.cag_reasons = []
+            paper.cag_action = ""
+    return papers
