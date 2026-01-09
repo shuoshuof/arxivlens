@@ -19,9 +19,9 @@ Langflow LLM rerank option:
 2) Set the Language Model provider to Ollama (or your choice)
 3) Copy the flow ID and API key
 
-## Key Prompts
-### Ollama LLM Rerank Prompt
-
+## Backends
+### Ollama Backend
+#### Ollama LLM Rerank Prompt
 ```plaintext
 {
     "role": "user",
@@ -31,8 +31,13 @@ Langflow LLM rerank option:
     ),
 }
 ```
-### Langflow LLM Rerank Prompt
+### Langflow Backend
+#### Langflow Graphical Flow
+![Langflow LLM Rerank Flow](docs/images/langflow.png)
+#### Langflow LLM Rerank Prompt
 [See prompts for details](docs/prompt.md)
+
+
 
 ## CLI Arguments
 
