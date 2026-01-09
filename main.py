@@ -130,7 +130,7 @@ if __name__ == "__main__":
         "--langflow_mode",
         type=str,
         help="Langflow mode: http or local",
-        default="http",
+        default="local",
     )
     add_argument(
         "--langflow_flow_id",
@@ -204,7 +204,7 @@ if __name__ == "__main__":
                 base_url=args.ollama_base_url,
             )
         elif backend == "langflow":
-            langflow_mode = (args.langflow_mode or "http").strip().lower()
+            langflow_mode = (args.langflow_mode or "local").strip().lower()
             if langflow_mode == "http" and not args.langflow_flow_id:
                 raise ValueError(
                     "Missing LLM_RERANK_FLOW_ID. Set --langflow_flow_id or LLM_RERANK_FLOW_ID env."

@@ -97,7 +97,7 @@ def langflow_llm_rerank(
     api_key: str | None = None,
     timeout: int = 90,
     retries: int = 1,
-    mode: str = "http",
+    mode: str = "local",
     flow_path: str | None = None,
 ) -> list[ArxivPaper]:
     for paper in papers:

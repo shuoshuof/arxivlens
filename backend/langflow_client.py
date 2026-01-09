@@ -217,7 +217,7 @@ def llm_rerank_json(
     api_key: str | None = None,
     timeout: int = 90,
     retries: int = 1,
-    mode: str = "http",
+    mode: str = "local",
     flow_path: str | None = None,
 ) -> dict[str, Any]:
     mode = (mode or "http").strip().lower()
