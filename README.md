@@ -4,7 +4,7 @@ This repo root contains a minimal demo pipeline extracted from `zotero-arxiv-dai
 
 1) Read `overview.md` as project context
 2) Fetch arXiv candidates (title + abstract)
-3) Embedding rerank via `recommender.rerank_paper`
+3) Embedding rerank via `utils.recommender.rerank_paper`
 4) Optional LLM rerank via Ollama (JSON output)
 5) Print Top-N to terminal (no email, no web)
 
@@ -55,12 +55,12 @@ python main.py --enable_llm_rerank true --llm_rerank_backend langflow --llm_rera
   - If LLM rerank disabled: `final = norm_embed`.
   - When LLM rerank enabled, only `relevant=true` papers are kept.
 
-### arxiv_fetcher.py
+### utils/arxiv_fetcher.py
 - `get_arxiv_paper(query, days=7, max_candidates=150, debug=False) -> list[ArxivPaper]`
 - Uses RSS to collect IDs, then fetches metadata in batches of 20.
 - Filters by `days` using published time (UTC).
 
-### recommender.py
+### utils/recommender.py
 - `rerank_paper(candidate, corpus, model="avsolatorio/GIST-small-Embedding-v0")`
 - `corpus` must be:
   ```python
@@ -68,17 +68,21 @@ python main.py --enable_llm_rerank true --llm_rerank_backend langflow --llm_rera
   ```
 - Produces `paper.score` and returns sorted list.
 
-### paper.py
+### utils/paper.py
 - `ArxivPaper` wrapper fields:
   - `title`, `summary`, `authors`, `arxiv_id`, `url`, `categories`
   - `published`, `published_date`, `pdf_url`
   - scoring/LLM rerank fields: `score`, `final_score`, `llm_rerank_relevant`, `llm_rerank_fit_score`, `llm_rerank_reasons`, `llm_rerank_action`, `llm_rerank_failed`
 
-### ollama_client.py
+### backend/ollama_client.py
 - `chat_json(model, system, user, base_url="http://localhost:11434", timeout=90, retries=2) -> dict`
 - Enforces JSON-only output; retries if invalid JSON.
 
-### llm_rerank.py
+### backend/langflow_client.py
+- `llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
+- Runs a Langflow flow and extracts JSON output.
+
+### backend/llm_rerank.py
 - `ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
 - `langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
 - Expects JSON:

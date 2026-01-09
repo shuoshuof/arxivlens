@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from langflow_client import llm_rerank_json
-from ollama_client import chat_json
-from paper import ArxivPaper
+from backend.langflow_client import llm_rerank_json
+from backend.ollama_client import chat_json
+from utils.paper import ArxivPaper
 
 
 def _build_messages(overview_text: str, paper: ArxivPaper) -> tuple[str, str]:

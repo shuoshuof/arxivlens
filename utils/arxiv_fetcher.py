@@ -2,7 +2,7 @@ import arxiv
 import feedparser
 from tqdm import tqdm
 
-from paper import ArxivPaper
+from utils.paper import ArxivPaper
 
 
 def get_arxiv_paper(query: str, debug: bool = False) -> list[ArxivPaper]:

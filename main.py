@@ -6,9 +6,9 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
-from arxiv_fetcher import get_arxiv_paper
-from llm_rerank import langflow_llm_rerank, ollama_llm_rerank
-from recommender import rerank_paper
+from utils.arxiv_fetcher import get_arxiv_paper
+from backend.llm_rerank import langflow_llm_rerank, ollama_llm_rerank
+from utils.recommender import rerank_paper
 
 
 def _str2bool(value: str | bool) -> bool:

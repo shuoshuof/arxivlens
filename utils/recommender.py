@@ -4,7 +4,7 @@ from datetime import datetime
 import torch
 from sentence_transformers import SentenceTransformer
 
-from paper import ArxivPaper
+from utils.paper import ArxivPaper
 
 
 def rerank_paper(

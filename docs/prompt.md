@@ -1,3 +1,6 @@
+
+## Langflow LLM Rerank Prompt Template
+```bash
 ROLE:
 You are a Literature Screening Assistant.
 
@@ -38,3 +41,4 @@ Return ONLY valid JSON with EXACT keys:
 - reasons (list of 2-5 strings)
 - action (string from the action set)
 No markdown, no extra keys, no trailing text.
+```

@@ -4,7 +4,7 @@ This document describes the root-level demo pipeline: overview -> embedding rera
 
 ## Data Model
 
-### `paper.ArxivPaper`
+### `utils.paper.ArxivPaper`
 Wrapper around `arxiv.Result` with extra scoring fields.
 
 Properties:
@@ -19,7 +19,7 @@ Properties:
 - `pdf_url: str | None` - PDF URL (derived if missing).
 
 Scoring fields (mutated by pipeline):
-- `score: float | None` - Embedding relevance score (from `recommender.rerank_paper`).
+- `score: float | None` - Embedding relevance score (from `utils.recommender.rerank_paper`).
 - `final_score: float | None` - Final score after normalization and optional LLM rerank fusion.
 - `llm_rerank_relevant: bool | None` - LLM rerank relevance flag.
 - `llm_rerank_fit_score: float | None` - LLM rerank fit score (0-10).
@@ -96,7 +96,7 @@ Scoring and filtering (main flow):
 
 ## arXiv Fetch
 
-### `arxiv_fetcher.get_arxiv_paper(query: str, debug: bool = False) -> list[ArxivPaper]`
+### `utils.arxiv_fetcher.get_arxiv_paper(query: str, debug: bool = False) -> list[ArxivPaper]`
 Fetches candidate papers using arXiv RSS + API.
 
 Behavior:
@@ -112,7 +112,7 @@ Exceptions:
 
 ## Embedding Rerank
 
-### `recommender.rerank_paper(candidate, corpus, model="avsolatorio/GIST-small-Embedding-v0")`
+### `utils.recommender.rerank_paper(candidate, corpus, model="avsolatorio/GIST-small-Embedding-v0")`
 Ranks candidates by similarity to the corpus (overview).
 
 Inputs:
@@ -147,10 +147,10 @@ Notes:
 
 ## LLM Rerank
 
-### `llm_rerank.ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
+### `backend.llm_rerank.ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
 Runs Ollama checks on top candidates and attaches structured results.
 
-### `llm_rerank.langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
+### `backend.llm_rerank.langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
 Runs a Langflow flow for each top candidate and attaches structured results.
 
 For each paper:
@@ -183,7 +183,7 @@ Normalization rules:
 
 ## Ollama Client
 
-### `ollama_client.chat_json(model, system, user, base_url="http://localhost:11434", timeout=90, retries=2) -> dict`
+### `backend.ollama_client.chat_json(model, system, user, base_url="http://localhost:11434", timeout=90, retries=2) -> dict`
 Calls Ollama `/api/chat` and enforces JSON output.
 
 Request payload:
@@ -201,6 +201,11 @@ Response parsing:
 - Parses JSON; if invalid, tries substring from first `{` to last `}`.
 - On failure, retries by appending a strict "JSON only" message.
 - Raises `RuntimeError` after retries are exhausted.
+
+## Langflow Client
+
+### `backend.langflow_client.llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
+Calls Langflow `/api/v1/run/{flow_id}` and extracts JSON output.
 
 ## Scoring Summary
 
