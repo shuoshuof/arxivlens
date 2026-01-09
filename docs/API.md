@@ -206,6 +206,10 @@ Response parsing:
 
 ## Langflow Client
 
+### `backend.langflow_client.langflow_rerank_json_local(overview, title, abstract, flow_path, retries=1) -> dict`
+
+### `backend.langflow_client.langflow_rerank_json_http(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
+
 ### `backend.langflow_client.llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1, mode="local", flow_path=None) -> dict`
 Calls Langflow `/api/v1/run/{flow_id}` and extracts JSON output.
 

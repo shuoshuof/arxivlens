@@ -70,6 +70,8 @@ Langflow LLM rerank option:
 - Enforces JSON-only output; retries if invalid JSON.
 
 ### backend/langflow_client.py
+- `langflow_rerank_json_local(overview, title, abstract, flow_path, retries=1) -> dict`
+- `langflow_rerank_json_http(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
 - `llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1, mode="local", flow_path=None) -> dict`
 - Runs a Langflow flow and extracts JSON output.
 

@@ -105,6 +105,34 @@ def _extract_message(payload: dict[str, Any]) -> str:
     return _deep_find_text(payload, set())
 
 
+def _build_tweaks(overview: str, title: str, abstract: str) -> dict[str, Any]:
+    return {
+        "overview": {"input_value": overview},
+        "title": {"input_value": title},
+        "abstract": {"input_value": abstract},
+    }
+
+
+def _payload_to_json(payload: Any) -> dict[str, Any]:
+    if isinstance(payload, dict):
+        if {"relevant", "fit_score"} <= set(payload):
+            return payload
+        content = _extract_message(payload)
+    elif isinstance(payload, list):
+        for item in payload:
+            if isinstance(item, dict) and {"relevant", "fit_score"} <= set(item):
+                return item
+        content = _deep_find_text(payload, set())
+    elif isinstance(payload, str):
+        content = payload
+    else:
+        content = _deep_find_text(payload, set())
+
+    if not content:
+        raise ValueError("Langflow response missing message content")
+    return _extract_json(content)
+
+
 def _resolve_langflow_runner() -> Callable[..., Any] | None:
     try:
         from langflow.load import run_flow_from_json
@@ -208,6 +236,105 @@ def _run_flow_local(
     )
 
 
+def _run_local_once(flow_path: str, tweaks: dict[str, Any]) -> dict[str, Any]:
+    payload = _run_flow_local(flow_path, tweaks=tweaks)
+    return _payload_to_json(payload)
+
+
+def _run_http_once(
+    flow_id: str,
+    base_url: str,
+    api_key: str | None,
+    timeout: int,
+    tweaks: dict[str, Any],
+    session: requests.Session,
+) -> dict[str, Any]:
+    url = f"{base_url.rstrip('/')}/api/v1/run/{flow_id}"
+    payload = {
+        "input_type": "chat",
+        "output_type": "chat",
+        "input_value": "",
+        "tweaks": tweaks,
+    }
+    headers = {}
+    if api_key:
+        headers["x-api-key"] = api_key
+    response = session.post(url, json=payload, headers=headers, timeout=timeout)
+    response.raise_for_status()
+    return _payload_to_json(response.json())
+
+
+def _run_with_retries(
+    label: str,
+    retries: int,
+    runner: Callable[[], dict[str, Any]],
+    exc_types: tuple[type[Exception], ...],
+) -> dict[str, Any]:
+    last_error: Exception | None = None
+    for attempt in range(retries + 1):
+        try:
+            return runner()
+        except exc_types as exc:
+            last_error = exc
+            logging.warning(
+                "%s LLM rerank failed (attempt %s/%s): %s",
+                label,
+                attempt + 1,
+                retries + 1,
+                exc,
+            )
+            if attempt < retries:
+                continue
+            break
+    raise RuntimeError(
+        f"{label} LLM rerank failed after {retries + 1} attempts: {last_error}"
+    )
+
+
+def langflow_rerank_json_local(
+    overview: str,
+    title: str,
+    abstract: str,
+    flow_path: str,
+    retries: int = 1,
+) -> dict[str, Any]:
+    tweaks = _build_tweaks(overview, title, abstract)
+    return _run_with_retries(
+        "Langflow local",
+        retries,
+        lambda: _run_local_once(flow_path, tweaks),
+        (json.JSONDecodeError, ValueError, RuntimeError),
+    )
+
+
+def langflow_rerank_json_http(
+    flow_id: str,
+    overview: str,
+    title: str,
+    abstract: str,
+    base_url: str = "http://localhost:7863",
+    api_key: str | None = None,
+    timeout: int = 90,
+    retries: int = 1,
+) -> dict[str, Any]:
+    tweaks = _build_tweaks(overview, title, abstract)
+    session = requests.Session()
+    session.trust_env = False
+    return _run_with_retries(
+        "Langflow",
+        retries,
+        lambda: _run_http_once(
+            flow_id=flow_id,
+            base_url=base_url,
+            api_key=api_key,
+            timeout=timeout,
+            tweaks=tweaks,
+            session=session,
+        ),
+        (requests.RequestException, json.JSONDecodeError, ValueError),
+    )
+
+
 def llm_rerank_json(
     flow_id: str,
     overview: str,
@@ -220,85 +347,24 @@ def llm_rerank_json(
     mode: str = "local",
     flow_path: str | None = None,
 ) -> dict[str, Any]:
-    mode = (mode or "http").strip().lower()
-    tweaks = {
-        "overview": {"input_value": overview},
-        "title": {"input_value": title},
-        "abstract": {"input_value": abstract},
-    }
-    last_error: Exception | None = None
+    mode = (mode or "local").strip().lower()
     if mode == "local":
         if not flow_path:
             raise ValueError("flow_path is required when langflow_mode=local")
-        for attempt in range(retries + 1):
-            try:
-                payload = _run_flow_local(flow_path, tweaks=tweaks)
-                if isinstance(payload, dict) and {"relevant", "fit_score"} <= set(payload):
-                    return payload
-                content = ""
-                if isinstance(payload, str):
-                    content = payload
-                elif isinstance(payload, dict):
-                    content = _extract_message(payload)
-                elif isinstance(payload, list):
-                    for item in payload:
-                        if isinstance(item, dict):
-                            content = _extract_message(item)
-                            if content:
-                                break
-                    if not content:
-                        content = _deep_find_text(payload, set())
-                if not content:
-                    raise ValueError("Langflow local run missing message content")
-                return _extract_json(content)
-            except (json.JSONDecodeError, ValueError, RuntimeError) as exc:
-                last_error = exc
-                logging.warning(
-                    "Langflow local LLM rerank failed (attempt %s/%s): %s",
-                    attempt + 1,
-                    retries + 1,
-                    exc,
-                )
-                if attempt < retries:
-                    continue
-                break
-        raise RuntimeError(
-            f"Langflow local LLM rerank failed after {retries + 1} attempts: {last_error}"
+        return langflow_rerank_json_local(
+            overview=overview,
+            title=title,
+            abstract=abstract,
+            flow_path=flow_path,
+            retries=retries,
         )
-
-    url = f"{base_url.rstrip('/')}/api/v1/run/{flow_id}"
-    payload = {
-        "input_type": "chat",
-        "output_type": "chat",
-        "input_value": "",
-        "tweaks": tweaks,
-    }
-    headers = {}
-    if api_key:
-        headers["x-api-key"] = api_key
-
-    session = requests.Session()
-    session.trust_env = False
-    for attempt in range(retries + 1):
-        try:
-            response = session.post(url, json=payload, headers=headers, timeout=timeout)
-            response.raise_for_status()
-            data = response.json()
-            content = _extract_message(data)
-            if not content:
-                raise ValueError("Langflow response missing message content")
-            return _extract_json(content)
-        except (requests.RequestException, json.JSONDecodeError, ValueError) as exc:
-            last_error = exc
-            logging.warning(
-                "Langflow LLM rerank failed (attempt %s/%s): %s",
-                attempt + 1,
-                retries + 1,
-                exc,
-            )
-            if attempt < retries:
-                continue
-            break
-    raise RuntimeError(
-        f"Langflow LLM rerank failed after {retries + 1} attempts: {last_error}"
+    return langflow_rerank_json_http(
+        flow_id=flow_id,
+        overview=overview,
+        title=title,
+        abstract=abstract,
+        base_url=base_url,
+        api_key=api_key,
+        timeout=timeout,
+        retries=retries,
     )
