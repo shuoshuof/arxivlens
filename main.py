@@ -213,7 +213,12 @@ if __name__ == "__main__":
     top_retrieve = sorted(
         top_retrieve, key=lambda p: p.final_score or 0.0, reverse=True
     )
-    logging.info("Printing %s papers", len(top_retrieve))
-    for idx, paper in enumerate(top_retrieve, start=1):
-        print(format_paper_line(paper, idx))
-        print("")
+    if not top_retrieve:
+        for idx, paper in enumerate(ranked[: args.top_retrieve], start=1):
+            print(format_paper_line(paper, idx))
+            print("")
+    else:
+        logging.info("Printing %s papers", len(top_retrieve))
+        for idx, paper in enumerate(top_retrieve, start=1):
+            print(format_paper_line(paper, idx))
+            print("")
