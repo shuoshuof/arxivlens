@@ -11,24 +11,13 @@ This repo root contains a minimal demo pipeline extracted from `zotero-arxiv-dai
 ## Quick Run
 
 ```bash
-export ARXIV_QUERY="cs.RO+cs.AI"
-python main.py \
-  --overview_path overview.md \
-  --top_retrieve 50 \
-  --enable_llm_rerank true \
-  --llm_rerank_backend ollama \
-  --ollama_model "qwen2.5:7b"
+python main.py --overview_path data/overview.md --arxiv_query cs.AI+cs.CV+cs.LG+cs.CL --top_retrieve 10 --enable_llm_rerank true --llm_rerank_backend langflow --langflow_flow_id d6280b6b-4d2a-497d-bcbb-9116ca0ba041 --langflow_api_key sk-TpmyAx3mIMmiivJ2tZulONiCg309yMKt91lmlm7XIF4
 ```
 
 Langflow LLM rerank option:
 1) Open Langflow UI and import `llm_rerank_flow.json`
 2) Set the Language Model provider to Ollama (or your choice)
-3) Copy the flow ID and set `LLM_RERANK_FLOW_ID`
-4) Run:
-```bash
-export LLM_RERANK_FLOW_ID="your-flow-id"
-python main.py --enable_llm_rerank true --llm_rerank_backend langflow --llm_rerank_flow_id "$LLM_RERANK_FLOW_ID"
-```
+3) Copy the flow ID and API key
 
 ## CLI Arguments
 
@@ -40,7 +29,7 @@ python main.py --enable_llm_rerank true --llm_rerank_backend langflow --llm_rera
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
 - `--langflow_base_url` (default `http://localhost:7863`)
-- `--llm_rerank_flow_id` (required for langflow rerank)
+- `--langflow_flow_id` (required for langflow rerank)
 - `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug`
