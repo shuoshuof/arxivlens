@@ -1,6 +1,6 @@
 
 ## Langflow LLM Rerank Prompt Template
-```bash
+```plaintext
 ROLE:
 You are a Literature Screening Assistant.
 

@@ -5,8 +5,8 @@ This repo root contains a minimal demo pipeline extracted from `zotero-arxiv-dai
 1) Read `overview.md` as project context
 2) Fetch arXiv candidates (title + abstract)
 3) Embedding rerank via `utils.recommender.rerank_paper`
-4) Optional LLM rerank via Ollama (JSON output)
-5) Print Top-N to terminal (no email, no web)
+4) Optional LLM rerank via Ollama (JSON output) or Langflow (JSON output)
+5) Print Top-N to terminal
 
 ## Quick Run
 
@@ -18,6 +18,21 @@ Langflow LLM rerank option:
 1) Open Langflow UI and import `llm_rerank_flow.json`
 2) Set the Language Model provider to Ollama (or your choice)
 3) Copy the flow ID and API key
+
+## Key Prompts
+### Ollama LLM Rerank Prompt
+
+```plaintext
+{
+    "role": "user",
+    "content": (
+        "Your previous response was invalid or not JSON. "
+        "Return ONLY valid JSON with the required keys, no markdown."
+    ),
+}
+```
+### Langflow LLM Rerank Prompt
+[See prompts for details](docs/prompt.md)
 
 ## CLI Arguments
 
