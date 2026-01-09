@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from arxiv_fetcher import get_arxiv_paper
-from cag_refine import cag_refine
+from cag_refine import langflow_cag_refine, ollama_cag_refine
 from recommender import rerank_paper
 
 
@@ -94,6 +94,12 @@ if __name__ == "__main__":
     add_argument("--top_retrieve", type=int, help="Top papers after embedding rerank", default=50)
     add_argument("--enable_cag", type=_str2bool, help="Enable CAG refinement", default=True)
     add_argument(
+        "--cag_backend",
+        type=str,
+        help="CAG backend: ollama or langflow",
+        default="ollama",
+    )
+    add_argument(
         "--ollama_base_url",
         type=str,
         help="Ollama base URL",
@@ -104,6 +110,24 @@ if __name__ == "__main__":
         type=str,
         help="Ollama chat model name",
         default="qwen2.5:14b",
+    )
+    add_argument(
+        "--langflow_base_url",
+        type=str,
+        help="Langflow base URL",
+        default="http://localhost:7863",
+    )
+    add_argument(
+        "--langflow_flow_id",
+        type=str,
+        help="Langflow flow ID for CAG refinement",
+        default=None,
+    )
+    add_argument(
+        "--langflow_api_key",
+        type=str,
+        help="Langflow API key (if required)",
+        default=None,
     )
     add_argument("--seed", type=int, help="Random seed", default=None)
     parser.add_argument("--debug", action="store_true", help="Debug mode")
@@ -149,13 +173,27 @@ if __name__ == "__main__":
         paper.final_score = norm_score
 
     if args.enable_cag:
-        logging.info("Running CAG refinement via Ollama (%s)", args.ollama_model)
-        cag_refine(
-            overview_text,
-            top_retrieve,
-            model=args.ollama_model,
-            base_url=args.ollama_base_url,
-        )
+        backend = (args.cag_backend or "ollama").strip().lower()
+        logging.info("Running CAG refinement via %s", backend)
+        if backend == "ollama":
+            ollama_cag_refine(
+                overview_text,
+                top_retrieve,
+                model=args.ollama_model,
+                base_url=args.ollama_base_url,
+            )
+        elif backend == "langflow":
+            if not args.langflow_flow_id:
+                raise ValueError("Missing LANGFLOW_FLOW_ID. Set --langflow_flow_id or LANGFLOW_FLOW_ID env.")
+            langflow_cag_refine(
+                overview_text,
+                top_retrieve,
+                flow_id=args.langflow_flow_id,
+                base_url=args.langflow_base_url,
+                api_key=args.langflow_api_key,
+            )
+        else:
+            raise ValueError(f"Unsupported CAG backend: {backend}")
         for paper, norm_score in zip(top_retrieve, normalized_scores):
             fit_score = paper.cag_fit_score or 0.0
             paper.final_score = 0.6 * norm_score + 0.4 * (fit_score / 10.0)

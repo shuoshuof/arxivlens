@@ -16,7 +16,18 @@ python main.py \
   --overview_path overview.md \
   --top_retrieve 50 \
   --enable_cag true \
+  --cag_backend ollama \
   --ollama_model "qwen2.5:7b"
+```
+
+Langflow CAG option:
+1) Open Langflow UI and import `cag_flow.json`
+2) Set the Language Model provider to Ollama (or your choice)
+3) Copy the flow ID and set `LANGFLOW_FLOW_ID`
+4) Run:
+```bash
+export LANGFLOW_FLOW_ID="your-flow-id"
+python main.py --enable_cag true --cag_backend langflow --langflow_flow_id "$LANGFLOW_FLOW_ID"
 ```
 
 ## CLI Arguments
@@ -25,8 +36,12 @@ python main.py \
 - `--arxiv_query` (default from `ARXIV_QUERY`)
 - `--top_retrieve` (default `50`)
 - `--enable_cag` (default `true`)
+- `--cag_backend` (`ollama` or `langflow`, default `ollama`)
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
+- `--langflow_base_url` (default `http://localhost:7863`)
+- `--langflow_flow_id` (required for CAG)
+- `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug`
 
@@ -64,7 +79,8 @@ python main.py \
 - Enforces JSON-only output; retries if invalid JSON.
 
 ### cag_refine.py
-- `cag_refine(overview_text, papers, model, base_url, timeout=90, retries=1)`
+- `ollama_cag_refine(overview_text, papers, model, base_url, timeout=90, retries=1)`
+- `langflow_cag_refine(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
 - Expects JSON:
   ```json
   {"relevant": true, "fit_score": 0-10, "reasons": ["..."], "action": "..."}

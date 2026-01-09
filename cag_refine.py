@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from langflow_client import cag_json
 from ollama_client import chat_json
 from paper import ArxivPaper
 
@@ -53,7 +54,8 @@ def _normalize_cag_output(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def cag_refine(
+
+def ollama_cag_refine(
     overview_text: str,
     papers: list[ArxivPaper],
     model: str,
@@ -85,3 +87,40 @@ def cag_refine(
             paper.cag_reasons = []
             paper.cag_action = ""
     return papers
+
+
+def langflow_cag_refine(
+    overview_text: str,
+    papers: list[ArxivPaper],
+    flow_id: str,
+    base_url: str,
+    api_key: str | None = None,
+    timeout: int = 90,
+    retries: int = 1,
+) -> list[ArxivPaper]:
+    for paper in papers:
+        try:
+            data = cag_json(
+                flow_id=flow_id,
+                overview=overview_text,
+                title=paper.title,
+                abstract=paper.summary,
+                base_url=base_url,
+                api_key=api_key,
+                timeout=timeout,
+                retries=retries,
+            )
+            normalized = _normalize_cag_output(data)
+            paper.cag_relevant = normalized["relevant"]
+            paper.cag_fit_score = normalized["fit_score"]
+            paper.cag_reasons = normalized["reasons"]
+            paper.cag_action = normalized["action"]
+        except Exception as exc:
+            logging.warning("CAG failed for %s: %s", paper.arxiv_id, exc)
+            paper.cag_failed = True
+            paper.cag_relevant = False
+            paper.cag_fit_score = 0.0
+            paper.cag_reasons = []
+            paper.cag_action = ""
+    return papers
+

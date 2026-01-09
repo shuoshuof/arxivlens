@@ -37,8 +37,12 @@ CLI arguments (also read from env by uppercase name):
 - `--arxiv_query` (required if `ARXIV_QUERY` not set)
 - `--top_retrieve` (default `50`)
 - `--enable_cag` (default `true`)
+- `--cag_backend` (`ollama` or `langflow`, default `ollama`)
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
+- `--langflow_base_url` (default `http://localhost:7863`)
+- `--langflow_flow_id` (required for `langflow` backend)
+- `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug` (flag)
 
@@ -141,32 +145,34 @@ Notes:
 - With a single-item corpus (overview), the weight is always 1.
 - `encoder.similarity` uses cosine similarity in SentenceTransformers.
 
-## CAG Refinement (Ollama)
+## CAG Refinement
 
-### `cag_refine.cag_refine(overview_text, papers, model, base_url, timeout=90, retries=1)`
-Runs LLM checks on top candidates and attaches structured results.
+### `cag_refine.ollama_cag_refine(overview_text, papers, model, base_url, timeout=90, retries=1)`
+Runs Ollama checks on top candidates and attaches structured results.
+
+### `cag_refine.langflow_cag_refine(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
+Runs a Langflow flow for each top candidate and attaches structured results.
 
 For each paper:
-1) Builds prompt via `_build_messages`.
-2) Calls `ollama_client.chat_json`.
-3) Normalizes output and sets:
+1) Calls the selected backend function.
+2) Normalizes output and sets:
    - `cag_relevant`
    - `cag_fit_score`
    - `cag_reasons`
    - `cag_action`
-4) On failure:
+3) On failure:
    - `cag_failed = True`
    - `cag_relevant = False`
    - `cag_fit_score = 0.0`
    - `cag_reasons = []`
    - `cag_action = ""`
 
-#### `_build_messages(overview_text: str, paper: ArxivPaper) -> (system, user)`
-System prompt enforces JSON output with keys:
-```
-relevant (bool), fit_score (0-10), reasons (list[str]), action (str)
-```
-User prompt includes overview + paper title/abstract.
+Langflow requirements:
+- Import `cag_flow.json` into Langflow.
+- The flow must return JSON with keys:
+  ```
+  relevant (bool), fit_score (0-10), reasons (list[str]), action (str)
+  ```
 
 #### `_normalize_cag_output(data: dict) -> dict`
 Normalization rules:
