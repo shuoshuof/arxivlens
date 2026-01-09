@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from langflow_client import cag_json
+from langflow_client import llm_rerank_json
 from ollama_client import chat_json
 from paper import ArxivPaper
 
@@ -25,7 +25,7 @@ def _build_messages(overview_text: str, paper: ArxivPaper) -> tuple[str, str]:
     return system, user
 
 
-def _normalize_cag_output(data: dict[str, Any]) -> dict[str, Any]:
+def _normalize_llm_rerank_output(data: dict[str, Any]) -> dict[str, Any]:
     relevant = data.get("relevant", False)
     if isinstance(relevant, str):
         relevant = relevant.strip().lower() in {"true", "1", "yes"}
@@ -55,7 +55,7 @@ def _normalize_cag_output(data: dict[str, Any]) -> dict[str, Any]:
 
 
 
-def ollama_cag_refine(
+def ollama_llm_rerank(
     overview_text: str,
     papers: list[ArxivPaper],
     model: str,
@@ -74,22 +74,22 @@ def ollama_cag_refine(
                 timeout=timeout,
                 retries=retries,
             )
-            normalized = _normalize_cag_output(data)
-            paper.cag_relevant = normalized["relevant"]
-            paper.cag_fit_score = normalized["fit_score"]
-            paper.cag_reasons = normalized["reasons"]
-            paper.cag_action = normalized["action"]
+            normalized = _normalize_llm_rerank_output(data)
+            paper.llm_rerank_relevant = normalized["relevant"]
+            paper.llm_rerank_fit_score = normalized["fit_score"]
+            paper.llm_rerank_reasons = normalized["reasons"]
+            paper.llm_rerank_action = normalized["action"]
         except Exception as exc:
-            logging.warning("CAG failed for %s: %s", paper.arxiv_id, exc)
-            paper.cag_failed = True
-            paper.cag_relevant = False
-            paper.cag_fit_score = 0.0
-            paper.cag_reasons = []
-            paper.cag_action = ""
+            logging.warning("LLM rerank failed for %s: %s", paper.arxiv_id, exc)
+            paper.llm_rerank_failed = True
+            paper.llm_rerank_relevant = False
+            paper.llm_rerank_fit_score = 0.0
+            paper.llm_rerank_reasons = []
+            paper.llm_rerank_action = ""
     return papers
 
 
-def langflow_cag_refine(
+def langflow_llm_rerank(
     overview_text: str,
     papers: list[ArxivPaper],
     flow_id: str,
@@ -100,7 +100,7 @@ def langflow_cag_refine(
 ) -> list[ArxivPaper]:
     for paper in papers:
         try:
-            data = cag_json(
+            data = llm_rerank_json(
                 flow_id=flow_id,
                 overview=overview_text,
                 title=paper.title,
@@ -110,17 +110,16 @@ def langflow_cag_refine(
                 timeout=timeout,
                 retries=retries,
             )
-            normalized = _normalize_cag_output(data)
-            paper.cag_relevant = normalized["relevant"]
-            paper.cag_fit_score = normalized["fit_score"]
-            paper.cag_reasons = normalized["reasons"]
-            paper.cag_action = normalized["action"]
+            normalized = _normalize_llm_rerank_output(data)
+            paper.llm_rerank_relevant = normalized["relevant"]
+            paper.llm_rerank_fit_score = normalized["fit_score"]
+            paper.llm_rerank_reasons = normalized["reasons"]
+            paper.llm_rerank_action = normalized["action"]
         except Exception as exc:
-            logging.warning("CAG failed for %s: %s", paper.arxiv_id, exc)
-            paper.cag_failed = True
-            paper.cag_relevant = False
-            paper.cag_fit_score = 0.0
-            paper.cag_reasons = []
-            paper.cag_action = ""
+            logging.warning("LLM rerank failed for %s: %s", paper.arxiv_id, exc)
+            paper.llm_rerank_failed = True
+            paper.llm_rerank_relevant = False
+            paper.llm_rerank_fit_score = 0.0
+            paper.llm_rerank_reasons = []
+            paper.llm_rerank_action = ""
     return papers
-

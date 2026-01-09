@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from arxiv_fetcher import get_arxiv_paper
-from cag_refine import langflow_cag_refine, ollama_cag_refine
+from llm_rerank import langflow_llm_rerank, ollama_llm_rerank
 from recommender import rerank_paper
 
 
@@ -17,7 +17,7 @@ def _str2bool(value: str | bool) -> bool:
     return value.strip().lower() in {"true", "1", "yes", "y"}
 
 
-parser = argparse.ArgumentParser(description="Overview → Embedding → CAG demo")
+parser = argparse.ArgumentParser(description="Overview → Embedding → LLM rerank demo")
 
 
 def add_argument(*args, **kwargs):
@@ -61,13 +61,17 @@ def normalize_scores(scores: list[float]) -> list[float]:
 
 def format_paper_line(paper, rank: int) -> str:
     embed_score = paper.score if paper.score is not None else 0.0
-    fit_score = paper.cag_fit_score if paper.cag_fit_score is not None else 0.0
+    fit_score = (
+        paper.llm_rerank_fit_score
+        if paper.llm_rerank_fit_score is not None
+        else 0.0
+    )
     final_score = paper.final_score if paper.final_score is not None else 0.0
     categories = ", ".join(paper.categories) if paper.categories else "n/a"
     published = paper.published_date or "n/a"
-    reasons = paper.cag_reasons or []
+    reasons = paper.llm_rerank_reasons or []
     lines = [
-        f"{rank}. final={final_score:.3f} embed={embed_score:.3f} fit={fit_score:.1f}",
+        f"{rank}. final={final_score:.3f} embed={embed_score:.3f} llm={fit_score:.1f}",
         f"   published: {published} | categories: {categories}",
         f"   title: {paper.title}",
         f"   url: {paper.url}",
@@ -75,8 +79,8 @@ def format_paper_line(paper, rank: int) -> str:
     ]
     for reason in reasons[:2]:
         lines.append(f"   reason: {reason}")
-    if paper.cag_action:
-        lines.append(f"   action: {paper.cag_action}")
+    if paper.llm_rerank_action:
+        lines.append(f"   action: {paper.llm_rerank_action}")
     return "\n".join(lines)
 
 
@@ -92,11 +96,16 @@ if __name__ == "__main__":
         default=None,
     )
     add_argument("--top_retrieve", type=int, help="Top papers after embedding rerank", default=50)
-    add_argument("--enable_cag", type=_str2bool, help="Enable CAG refinement", default=True)
     add_argument(
-        "--cag_backend",
+        "--enable_llm_rerank",
+        type=_str2bool,
+        help="Enable LLM rerank",
+        default=True,
+    )
+    add_argument(
+        "--llm_rerank_backend",
         type=str,
-        help="CAG backend: ollama or langflow",
+        help="LLM rerank backend: ollama or langflow",
         default="ollama",
     )
     add_argument(
@@ -120,7 +129,7 @@ if __name__ == "__main__":
     add_argument(
         "--langflow_flow_id",
         type=str,
-        help="Langflow flow ID for CAG refinement",
+        help="Langflow flow ID for LLM rerank",
         default=None,
     )
     add_argument(
@@ -172,11 +181,11 @@ if __name__ == "__main__":
     for paper, norm_score in zip(top_retrieve, normalized_scores):
         paper.final_score = norm_score
 
-    if args.enable_cag:
-        backend = (args.cag_backend or "ollama").strip().lower()
-        logging.info("Running CAG refinement via %s", backend)
+    if args.enable_llm_rerank:
+        backend = (args.llm_rerank_backend or "ollama").strip().lower()
+        logging.info("Running LLM rerank via %s", backend)
         if backend == "ollama":
-            ollama_cag_refine(
+            ollama_llm_rerank(
                 overview_text,
                 top_retrieve,
                 model=args.ollama_model,
@@ -184,8 +193,10 @@ if __name__ == "__main__":
             )
         elif backend == "langflow":
             if not args.langflow_flow_id:
-                raise ValueError("Missing LANGFLOW_FLOW_ID. Set --langflow_flow_id or LANGFLOW_FLOW_ID env.")
-            langflow_cag_refine(
+                raise ValueError(
+                    "Missing LLM_RERANK_FLOW_ID. Set --langflow_flow_id or LLM_RERANK_FLOW_ID env."
+                )
+            langflow_llm_rerank(
                 overview_text,
                 top_retrieve,
                 flow_id=args.langflow_flow_id,
@@ -193,11 +204,11 @@ if __name__ == "__main__":
                 api_key=args.langflow_api_key,
             )
         else:
-            raise ValueError(f"Unsupported CAG backend: {backend}")
+            raise ValueError(f"Unsupported LLM rerank backend: {backend}")
         for paper, norm_score in zip(top_retrieve, normalized_scores):
-            fit_score = paper.cag_fit_score or 0.0
+            fit_score = paper.llm_rerank_fit_score or 0.0
             paper.final_score = 0.6 * norm_score + 0.4 * (fit_score / 10.0)
-        top_retrieve = [p for p in top_retrieve if p.cag_relevant]
+        top_retrieve = [p for p in top_retrieve if p.llm_rerank_relevant]
 
     top_retrieve = sorted(
         top_retrieve, key=lambda p: p.final_score or 0.0, reverse=True

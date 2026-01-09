@@ -12,11 +12,11 @@ class ArxivPaper:
     def __init__(self, paper: arxiv.Result):
         self._paper = paper
         self.score: Optional[float] = None
-        self.cag_relevant: Optional[bool] = None
-        self.cag_fit_score: Optional[float] = None
-        self.cag_reasons: Optional[list[str]] = None
-        self.cag_action: Optional[str] = None
-        self.cag_failed: bool = False
+        self.llm_rerank_relevant: Optional[bool] = None
+        self.llm_rerank_fit_score: Optional[float] = None
+        self.llm_rerank_reasons: Optional[list[str]] = None
+        self.llm_rerank_action: Optional[str] = None
+        self.llm_rerank_failed: bool = False
         self.final_score: Optional[float] = None
 
     @property

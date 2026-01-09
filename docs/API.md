@@ -1,6 +1,6 @@
 # API Technical Documentation
 
-This document describes the root-level demo pipeline: overview -> embedding rerank -> optional CAG refinement -> CLI output. It covers every public function, data shape, and scoring formula.
+This document describes the root-level demo pipeline: overview -> embedding rerank -> optional LLM rerank -> CLI output. It covers every public function, data shape, and scoring formula.
 
 ## Data Model
 
@@ -20,12 +20,12 @@ Properties:
 
 Scoring fields (mutated by pipeline):
 - `score: float | None` - Embedding relevance score (from `recommender.rerank_paper`).
-- `final_score: float | None` - Final score after normalization and optional CAG fusion.
-- `cag_relevant: bool | None` - CAG relevance flag.
-- `cag_fit_score: float | None` - CAG fit score (0-10).
-- `cag_reasons: list[str] | None` - CAG reasons.
-- `cag_action: str | None` - CAG action suggestion.
-- `cag_failed: bool` - True if CAG call failed.
+- `final_score: float | None` - Final score after normalization and optional LLM rerank fusion.
+- `llm_rerank_relevant: bool | None` - LLM rerank relevance flag.
+- `llm_rerank_fit_score: float | None` - LLM rerank fit score (0-10).
+- `llm_rerank_reasons: list[str] | None` - LLM rerank reasons.
+- `llm_rerank_action: str | None` - LLM rerank action suggestion.
+- `llm_rerank_failed: bool` - True if LLM rerank call failed.
 
 ## Pipeline Entry Point
 
@@ -36,12 +36,12 @@ CLI arguments (also read from env by uppercase name):
 - `--overview_path` (default `overview.md`)
 - `--arxiv_query` (required if `ARXIV_QUERY` not set)
 - `--top_retrieve` (default `50`)
-- `--enable_cag` (default `true`)
-- `--cag_backend` (`ollama` or `langflow`, default `ollama`)
+- `--enable_llm_rerank` (default `true`)
+- `--llm_rerank_backend` (`ollama` or `langflow`, default `ollama`)
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
 - `--langflow_base_url` (default `http://localhost:7863`)
-- `--langflow_flow_id` (required for `langflow` backend)
+- `--llm_rerank_flow_id` (required for `langflow` backend)
 - `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug` (flag)
@@ -62,7 +62,7 @@ Reads `overview.md` and returns:
   ```python
   [{"data": {"abstractNote": overview_text, "dateAdded": "YYYY-MM-DDTHH:MM:SSZ"}}]
   ```
-- `overview_text`: raw text used for CAG context.
+- `overview_text`: raw text used for LLM rerank context.
 
 #### `normalize_scores(scores: list[float]) -> list[float]`
 Min-max normalization:
@@ -74,10 +74,10 @@ Min-max normalization:
 
 #### `format_paper_line(paper: ArxivPaper, rank: int) -> str`
 Returns a multi-line string for CLI output. Includes:
-- final/embed/fit scores
+- final/embed/llm scores
 - published date + categories
 - title, URL, PDF URL
-- up to 2 CAG reasons + action (if present)
+- up to 2 LLM rerank reasons + action (if present)
 
 Scoring and filtering (main flow):
 1) `ranked = rerank_paper(candidates, corpus)`
@@ -87,10 +87,10 @@ Scoring and filtering (main flow):
    norm_embed_i = normalize(score_i)
    final_i = norm_embed_i
    ```
-4) If CAG enabled:
+4) If LLM rerank enabled:
    ```
    final_i = 0.6 * norm_embed_i + 0.4 * (fit_score_i / 10)
-   keep only cag_relevant == True
+   keep only llm_rerank_relevant == True
    ```
 5) Sort by `final_score` desc, print all.
 
@@ -145,36 +145,36 @@ Notes:
 - With a single-item corpus (overview), the weight is always 1.
 - `encoder.similarity` uses cosine similarity in SentenceTransformers.
 
-## CAG Refinement
+## LLM Rerank
 
-### `cag_refine.ollama_cag_refine(overview_text, papers, model, base_url, timeout=90, retries=1)`
+### `llm_rerank.ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
 Runs Ollama checks on top candidates and attaches structured results.
 
-### `cag_refine.langflow_cag_refine(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
+### `llm_rerank.langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
 Runs a Langflow flow for each top candidate and attaches structured results.
 
 For each paper:
 1) Calls the selected backend function.
 2) Normalizes output and sets:
-   - `cag_relevant`
-   - `cag_fit_score`
-   - `cag_reasons`
-   - `cag_action`
+   - `llm_rerank_relevant`
+   - `llm_rerank_fit_score`
+   - `llm_rerank_reasons`
+   - `llm_rerank_action`
 3) On failure:
-   - `cag_failed = True`
-   - `cag_relevant = False`
-   - `cag_fit_score = 0.0`
-   - `cag_reasons = []`
-   - `cag_action = ""`
+   - `llm_rerank_failed = True`
+   - `llm_rerank_relevant = False`
+   - `llm_rerank_fit_score = 0.0`
+   - `llm_rerank_reasons = []`
+   - `llm_rerank_action = ""`
 
 Langflow requirements:
-- Import `cag_flow.json` into Langflow.
+- Import `llm_rerank_flow.json` into Langflow.
 - The flow must return JSON with keys:
   ```
   relevant (bool), fit_score (0-10), reasons (list[str]), action (str)
   ```
 
-#### `_normalize_cag_output(data: dict) -> dict`
+#### `_normalize_llm_rerank_output(data: dict) -> dict`
 Normalization rules:
 - `relevant`: accepts bool or string (`"true"`, `"1"`, `"yes"`).
 - `fit_score`: cast to float, clamped to `[0, 10]`.
@@ -217,12 +217,12 @@ if all equal -> norm_i = 1.0
 ```
 
 Final score:
-- CAG disabled:
+- LLM rerank disabled:
   ```
   final_i = norm_i
   ```
-- CAG enabled:
+- LLM rerank enabled:
   ```
   final_i = 0.6 * norm_i + 0.4 * (fit_score_i / 10)
-  keep only cag_relevant == True
+  keep only llm_rerank_relevant == True
   ```

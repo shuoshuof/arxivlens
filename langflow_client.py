@@ -46,7 +46,7 @@ def _extract_message(payload: dict[str, Any]) -> str:
     return ""
 
 
-def cag_json(
+def llm_rerank_json(
     flow_id: str,
     overview: str,
     title: str,
@@ -86,7 +86,7 @@ def cag_json(
         except (requests.RequestException, json.JSONDecodeError, ValueError) as exc:
             last_error = exc
             logging.warning(
-                "Langflow CAG failed (attempt %s/%s): %s",
+                "Langflow LLM rerank failed (attempt %s/%s): %s",
                 attempt + 1,
                 retries + 1,
                 exc,
@@ -94,4 +94,6 @@ def cag_json(
             if attempt < retries:
                 continue
             break
-    raise RuntimeError(f"Langflow CAG failed after {retries + 1} attempts: {last_error}")
+    raise RuntimeError(
+        f"Langflow LLM rerank failed after {retries + 1} attempts: {last_error}"
+    )
