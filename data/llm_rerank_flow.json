@@ -6,93 +6,6 @@
         "className": "",
         "data": {
           "sourceHandle": {
-            "dataType": "TextInput",
-            "id": "TextInput-f6wc7",
-            "name": "text",
-            "output_types": [
-              "Message"
-            ]
-          },
-          "targetHandle": {
-            "fieldName": "overview",
-            "id": "Prompt-KM4vJ",
-            "inputTypes": [
-              "Message",
-              "Text"
-            ],
-            "type": "str"
-          }
-        },
-        "id": "reactflow__edge-TextInput-f6wc7{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f6wc7œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}-Prompt-KM4vJ{œfieldNameœ:œoverviewœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ,œTextœ],œtypeœ:œstrœ}",
-        "selected": false,
-        "source": "TextInput-f6wc7",
-        "sourceHandle": "{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f6wc7œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}",
-        "target": "Prompt-KM4vJ",
-        "targetHandle": "{œfieldNameœ:œoverviewœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ,œTextœ],œtypeœ:œstrœ}"
-      },
-      {
-        "animated": false,
-        "className": "",
-        "data": {
-          "sourceHandle": {
-            "dataType": "TextInput",
-            "id": "TextInput-f1BS6",
-            "name": "text",
-            "output_types": [
-              "Message"
-            ]
-          },
-          "targetHandle": {
-            "fieldName": "title",
-            "id": "Prompt-KM4vJ",
-            "inputTypes": [
-              "Message",
-              "Text"
-            ],
-            "type": "str"
-          }
-        },
-        "id": "reactflow__edge-TextInput-f1BS6{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f1BS6œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}-Prompt-KM4vJ{œfieldNameœ:œtitleœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ,œTextœ],œtypeœ:œstrœ}",
-        "selected": false,
-        "source": "TextInput-f1BS6",
-        "sourceHandle": "{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f1BS6œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}",
-        "target": "Prompt-KM4vJ",
-        "targetHandle": "{œfieldNameœ:œtitleœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ,œTextœ],œtypeœ:œstrœ}"
-      },
-      {
-        "animated": false,
-        "className": "",
-        "data": {
-          "sourceHandle": {
-            "dataType": "TextInput",
-            "id": "TextInput-jHvY2",
-            "name": "text",
-            "output_types": [
-              "Message"
-            ]
-          },
-          "targetHandle": {
-            "fieldName": "abstract",
-            "id": "Prompt-KM4vJ",
-            "inputTypes": [
-              "Message",
-              "Text"
-            ],
-            "type": "str"
-          }
-        },
-        "id": "reactflow__edge-TextInput-jHvY2{œdataTypeœ:œTextInputœ,œidœ:œTextInput-jHvY2œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}-Prompt-KM4vJ{œfieldNameœ:œabstractœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ,œTextœ],œtypeœ:œstrœ}",
-        "selected": false,
-        "source": "TextInput-jHvY2",
-        "sourceHandle": "{œdataTypeœ:œTextInputœ,œidœ:œTextInput-jHvY2œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}",
-        "target": "Prompt-KM4vJ",
-        "targetHandle": "{œfieldNameœ:œabstractœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ,œTextœ],œtypeœ:œstrœ}"
-      },
-      {
-        "animated": false,
-        "className": "",
-        "data": {
-          "sourceHandle": {
             "dataType": "Prompt",
             "id": "Prompt-KM4vJ",
             "name": "prompt",
@@ -145,6 +58,81 @@
         "sourceHandle": "{œdataTypeœ:œLanguageModelComponentœ,œidœ:œLanguageModelComponent-qPkutœ,œnameœ:œtext_outputœ,œoutput_typesœ:[œMessageœ]}",
         "target": "ChatOutput-cMmIz",
         "targetHandle": "{œfieldNameœ:œinput_valueœ,œidœ:œChatOutput-cMmIzœ,œinputTypesœ:[œDataœ,œDataFrameœ,œMessageœ],œtypeœ:œstrœ}"
+      },
+      {
+        "data": {
+          "sourceHandle": {
+            "dataType": "TextInput",
+            "id": "TextInput-f6wc7",
+            "name": "text",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "overview",
+            "id": "Prompt-KM4vJ",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        },
+        "id": "xy-edge__TextInput-f6wc7{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f6wc7œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}-Prompt-KM4vJ{œfieldNameœ:œoverviewœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
+        "source": "TextInput-f6wc7",
+        "sourceHandle": "{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f6wc7œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}",
+        "target": "Prompt-KM4vJ",
+        "targetHandle": "{œfieldNameœ:œoverviewœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}"
+      },
+      {
+        "data": {
+          "sourceHandle": {
+            "dataType": "TextInput",
+            "id": "TextInput-f1BS6",
+            "name": "text",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "title",
+            "id": "Prompt-KM4vJ",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        },
+        "id": "xy-edge__TextInput-f1BS6{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f1BS6œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}-Prompt-KM4vJ{œfieldNameœ:œtitleœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
+        "source": "TextInput-f1BS6",
+        "sourceHandle": "{œdataTypeœ:œTextInputœ,œidœ:œTextInput-f1BS6œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}",
+        "target": "Prompt-KM4vJ",
+        "targetHandle": "{œfieldNameœ:œtitleœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}"
+      },
+      {
+        "data": {
+          "sourceHandle": {
+            "dataType": "TextInput",
+            "id": "TextInput-jHvY2",
+            "name": "text",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "abstract",
+            "id": "Prompt-KM4vJ",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        },
+        "id": "xy-edge__TextInput-jHvY2{œdataTypeœ:œTextInputœ,œidœ:œTextInput-jHvY2œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}-Prompt-KM4vJ{œfieldNameœ:œabstractœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
+        "source": "TextInput-jHvY2",
+        "sourceHandle": "{œdataTypeœ:œTextInputœ,œidœ:œTextInput-jHvY2œ,œnameœ:œtextœ,œoutput_typesœ:[œMessageœ]}",
+        "target": "Prompt-KM4vJ",
+        "targetHandle": "{œfieldNameœ:œabstractœ,œidœ:œPrompt-KM4vJœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}"
       }
     ],
     "nodes": [
@@ -532,11 +520,11 @@
             "is_input": null,
             "is_output": null,
             "legacy": false,
-            "lf_version": "1.4.3",
             "metadata": {
               "code_hash": "3bf0b511e227",
               "module": "langflow.components.prompts.prompt.PromptComponent"
             },
+            "minimized": false,
             "name": "",
             "output_types": [],
             "outputs": [
@@ -545,8 +533,12 @@
                 "cache": true,
                 "display_name": "Prompt",
                 "group_outputs": false,
+                "hidden": null,
+                "loop_types": null,
                 "method": "build_prompt",
                 "name": "prompt",
+                "options": null,
+                "required_inputs": null,
                 "selected": "Message",
                 "tool_mode": true,
                 "types": [
@@ -556,6 +548,8 @@
               }
             ],
             "pinned": false,
+            "priority": null,
+            "replacement": null,
             "template": {
               "_type": "Component",
               "abstract": {
@@ -567,8 +561,7 @@
                 "file_path": "",
                 "info": "",
                 "input_types": [
-                  "Message",
-                  "Text"
+                  "Message"
                 ],
                 "list": false,
                 "load_from_db": false,
@@ -608,8 +601,7 @@
                 "file_path": "",
                 "info": "",
                 "input_types": [
-                  "Message",
-                  "Text"
+                  "Message"
                 ],
                 "list": false,
                 "load_from_db": false,
@@ -636,7 +628,7 @@
                 "title_case": false,
                 "trace_as_input": true,
                 "type": "prompt",
-                "value": "You are a research assistant. Decide whether a candidate paper is relevant to the project overview. Return ONLY JSON with keys: relevant (bool), fit_score (0-10 number), reasons (list of strings), action (string).\n\nProject overview:\n{overview}\n\nCandidate paper:\nTitle: {title}\nAbstract: {abstract}\n\nReturn JSON only."
+                "value": "ROLE:\nYou are a Literature Screening Assistant.\n\nTASK:\nGiven a project overview and a candidate paper (title + abstract), decide whether the paper is relevant to the\nproject.\n\nSCOPE & CONSTRAINTS (Single-turn, no tools):\n- Use ONLY the provided Overview, Title, and Abstract. Do not use outside knowledge.\n- Do NOT guess missing details. If the abstract is too vague to judge, set action=\"clarify\".\n- Keep reasons evidence-grounded by quoting short phrases from the inputs.\n\nINPUTS:\nProject overview:\n{overview}\n\nCandidate paper:\nTitle: {title}\nAbstract: {abstract}\n\nDECISION RULES:\n- Determine topical/method/domain alignment between overview and the paper.\n- Penalize clear mismatches (different domain/task, unrelated objective).\n- If key information is missing, ask up to 3 focused questions via reasons and use action=\"clarify\".\n- Consistency: if action=\"reject\" then relevant=false; if action in \"maybe_read\"/\"shortlist\"/\"read_full\" then\nrelevant=true; if action=\"clarify\" then relevant=false.\n\nSCORING (fit_score 0–10):\n0–2 irrelevant; 3–4 weak; 5–6 partial; 7–8 strong; 9–10 near-perfect.\n\nACTION (choose exactly one):\n\"reject\" | \"maybe_read\" | \"shortlist\" | \"read_full\" | \"clarify\"\n\nOUTPUT FORMAT (STRICT CONTRACT):\nReturn ONLY valid JSON with EXACT keys:\n- relevant (boolean)\n- fit_score (number 0-10)\n- reasons (list of 2-5 strings)\n- action (string from the action set)\nNo markdown, no extra keys, no trailing text."
               },
               "title": {
                 "advanced": false,
@@ -647,8 +639,7 @@
                 "file_path": "",
                 "info": "",
                 "input_types": [
-                  "Message",
-                  "Text"
+                  "Message"
                 ],
                 "list": false,
                 "load_from_db": false,
@@ -739,7 +730,7 @@
             "frozen": false,
             "icon": "brain-circuit",
             "key": "LanguageModelComponent",
-            "last_updated": "2026-01-09T16:27:39.766Z",
+            "last_updated": "2026-01-09T16:41:02.621Z",
             "legacy": false,
             "metadata": {
               "code_hash": "694ffc4b17b8",
@@ -1152,7 +1143,7 @@
           "x": 860,
           "y": 200
         },
-        "selected": true,
+        "selected": false,
         "type": "genericNode"
       },
       {
@@ -1438,9 +1429,9 @@
       }
     ],
     "viewport": {
-      "x": 166.22293120426968,
-      "y": 184.32896051315225,
-      "zoom": 1.1145196717754084
+      "x": 286.70833557728304,
+      "y": 126.57438410641976,
+      "zoom": 1.1145196717754087
     }
   },
   "description": "The Power of Language at Your Fingertips.",

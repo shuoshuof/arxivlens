@@ -97,6 +97,8 @@ def langflow_llm_rerank(
     api_key: str | None = None,
     timeout: int = 90,
     retries: int = 1,
+    mode: str = "http",
+    flow_path: str | None = None,
 ) -> list[ArxivPaper]:
     for paper in papers:
         try:
@@ -109,6 +111,8 @@ def langflow_llm_rerank(
                 api_key=api_key,
                 timeout=timeout,
                 retries=retries,
+                mode=mode,
+                flow_path=flow_path,
             )
             normalized = _normalize_llm_rerank_output(data)
             paper.llm_rerank_relevant = normalized["relevant"]

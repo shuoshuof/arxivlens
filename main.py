@@ -127,10 +127,22 @@ if __name__ == "__main__":
         default="http://localhost:7863",
     )
     add_argument(
+        "--langflow_mode",
+        type=str,
+        help="Langflow mode: http or local",
+        default="http",
+    )
+    add_argument(
         "--langflow_flow_id",
         type=str,
         help="Langflow flow ID for LLM rerank",
         default=None,
+    )
+    add_argument(
+        "--langflow_flow_path",
+        type=str,
+        help="Langflow flow JSON path (for langflow_mode=local)",
+        default="data/llm_rerank_flow.json",
     )
     add_argument(
         "--langflow_api_key",
@@ -192,16 +204,23 @@ if __name__ == "__main__":
                 base_url=args.ollama_base_url,
             )
         elif backend == "langflow":
-            if not args.langflow_flow_id:
+            langflow_mode = (args.langflow_mode or "http").strip().lower()
+            if langflow_mode == "http" and not args.langflow_flow_id:
                 raise ValueError(
                     "Missing LLM_RERANK_FLOW_ID. Set --langflow_flow_id or LLM_RERANK_FLOW_ID env."
+                )
+            if langflow_mode == "local" and not args.langflow_flow_path:
+                raise ValueError(
+                    "Missing LANGFLOW_FLOW_PATH. Set --langflow_flow_path or LANGFLOW_FLOW_PATH env."
                 )
             langflow_llm_rerank(
                 overview_text,
                 top_retrieve,
-                flow_id=args.langflow_flow_id,
+                flow_id=args.langflow_flow_id or "",
                 base_url=args.langflow_base_url,
                 api_key=args.langflow_api_key,
+                mode=langflow_mode,
+                flow_path=args.langflow_flow_path,
             )
         else:
             raise ValueError(f"Unsupported LLM rerank backend: {backend}")

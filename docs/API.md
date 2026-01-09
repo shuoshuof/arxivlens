@@ -41,7 +41,9 @@ CLI arguments (also read from env by uppercase name):
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
 - `--langflow_base_url` (default `http://localhost:7863`)
+- `--langflow_mode` (`http` or `local`, default `http`)
 - `--langflow_flow_id` (required for `langflow` backend)
+- `--langflow_flow_path` (flow JSON path for `langflow_mode=local`, default `data/llm_rerank_flow.json`)
 - `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug` (flag)
@@ -150,7 +152,7 @@ Notes:
 ### `backend.llm_rerank.ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
 Runs Ollama checks on top candidates and attaches structured results.
 
-### `backend.llm_rerank.langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
+### `backend.llm_rerank.langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1, mode="http", flow_path=None)`
 Runs a Langflow flow for each top candidate and attaches structured results.
 
 For each paper:
@@ -204,7 +206,7 @@ Response parsing:
 
 ## Langflow Client
 
-### `backend.langflow_client.llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
+### `backend.langflow_client.llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1, mode="http", flow_path=None) -> dict`
 Calls Langflow `/api/v1/run/{flow_id}` and extracts JSON output.
 
 ## Scoring Summary

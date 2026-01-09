@@ -29,7 +29,9 @@ Langflow LLM rerank option:
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
 - `--langflow_base_url` (default `http://localhost:7863`)
+- `--langflow_mode` (`http` or `local`, default `http`)
 - `--langflow_flow_id` (required for langflow rerank)
+- `--langflow_flow_path` (flow JSON path for `langflow_mode=local`, default `data/llm_rerank_flow.json`)
 - `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug`
@@ -68,12 +70,12 @@ Langflow LLM rerank option:
 - Enforces JSON-only output; retries if invalid JSON.
 
 ### backend/langflow_client.py
-- `llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
+- `llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1, mode="http", flow_path=None) -> dict`
 - Runs a Langflow flow and extracts JSON output.
 
 ### backend/llm_rerank.py
 - `ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
-- `langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1)`
+- `langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1, mode="http", flow_path=None)`
 - Expects JSON:
   ```json
   {"relevant": true, "fit_score": 0-10, "reasons": ["..."], "action": "..."}
