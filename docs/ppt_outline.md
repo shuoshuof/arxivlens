@@ -17,7 +17,7 @@ Notes (not on slide):
 
 ## Slide 2 - Problem and Why It Matters
 - arXiv publishes a high volume of new papers every day.
-- In fast moving fields like RL, robotics, and embodied AI, missing a key paper can derail a project.
+- In fast moving fields like CV, LLM, RL, robotics, and embodied AI, missing a key paper can derail a project.
 - Manual screening does not scale and is inconsistent across reviewers.
 
 Notes (not on slide):

@@ -33,7 +33,7 @@ Langflow LLM rerank option:
 ```
 ### Langflow Backend
 #### Langflow flow graph
-![Langflow LLM Rerank Flow](docs/images/langflow.png)
+![Langflow LLM Rerank Flow](docs/images/langflow.jpg)
 #### Langflow LLM Rerank Prompt
 [See prompts for details](docs/prompt.md)
 
