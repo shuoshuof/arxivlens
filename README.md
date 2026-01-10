@@ -103,3 +103,4 @@ Langflow LLM rerank option:
   {"relevant": true, "fit_score": 0-10, "reasons": ["..."], "action": "..."}
   ```
 - Normalizes values and attaches to each paper.
+-- `--debug`
