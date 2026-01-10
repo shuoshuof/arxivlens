@@ -53,3 +53,6 @@ Thumbs.db
 
 # External repo checked out in workspace
 zotero-arxiv-daily/
+
+# Ignore prompt files
+prompts/

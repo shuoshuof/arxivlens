@@ -37,6 +37,22 @@ Langflow LLM rerank option:
 #### Langflow LLM Rerank Prompt
 [See prompts for details](docs/prompt.md)
 
+## Ouptput Example
+### CLI Output in terminal:
+```plaintext
+1. final=0.742 embed=7.857 llm=8.0
+   published: 2026-01-08 | categories: cs.AI, cs.CV
+   title: Learning Latent Action World Models In The Wild
+   url: http://arxiv.org/abs/2601.05230v1
+   pdf: https://arxiv.org/pdf/2601.05230v1
+   reason 1: The paper focuses on learning latent actions in real-world scenarios which aligns with embodied AI and robotics.
+   reason 2: It addresses challenges related to environmental noise and diverse video content, relevant to reinforcement learning and locomotion tasks.
+   action: shortlist
+...
+```
+### Webpage Output
+After running, the terminal will print a local server address:
+![Webpage Example](docs/images/web.png)
 
 
 ## CLI Arguments

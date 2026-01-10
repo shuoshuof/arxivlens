@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from utils.arxiv_fetcher import get_arxiv_paper
 from backend.llm_rerank import langflow_llm_rerank, ollama_llm_rerank
 from utils.recommender import rerank_paper
+from utils.web_display import serve_papers
 
 
 def _str2bool(value: str | bool) -> bool:
@@ -77,8 +78,8 @@ def format_paper_line(paper, rank: int) -> str:
         f"   url: {paper.url}",
         f"   pdf: {paper.pdf_url}",
     ]
-    for reason in reasons[:2]:
-        lines.append(f"   reason: {reason}")
+    for i, reason in enumerate(reasons[:2]):
+        lines.append(f"   reason {i+1}: {reason}")
     if paper.llm_rerank_action:
         lines.append(f"   action: {paper.llm_rerank_action}")
     return "\n".join(lines)
@@ -232,12 +233,14 @@ if __name__ == "__main__":
     top_retrieve = sorted(
         top_retrieve, key=lambda p: p.final_score or 0.0, reverse=True
     )
-    if not top_retrieve:
-        for idx, paper in enumerate(ranked[: args.top_retrieve], start=1):
-            print(format_paper_line(paper, idx))
-            print("")
-    else:
-        logging.info("Printing %s papers", len(top_retrieve))
-        for idx, paper in enumerate(top_retrieve, start=1):
-            print(format_paper_line(paper, idx))
-            print("")
+    display_papers = top_retrieve or ranked[: args.top_retrieve]
+    if not display_papers:
+        logging.info("No papers to display.")
+        raise SystemExit(0)
+
+    logging.info("Printing %s papers", len(display_papers))
+    for idx, paper in enumerate(display_papers, start=1):
+        print(format_paper_line(paper, idx))
+        print("")
+
+    serve_papers(display_papers)
