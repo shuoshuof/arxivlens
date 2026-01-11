@@ -9,16 +9,19 @@ This repo root contains a minimal demo pipeline extracted from `zotero-arxiv-dai
 5) Print Top-N to terminal
 
 ## Quick Run
+### Run with Langchain Backend:
+```bash
+python main.py --overview_path data/overview.md --arxiv_query cs.AI+cs.CV+cs.LG+cs.CL --top_retrieve 10 --enable_llm_rerank true --llm_rerank_backend langchain
 
+```
+### Run with Langflow Backend:
 ```bash
 python main.py --overview_path data/overview.md --arxiv_query cs.AI+cs.CV+cs.LG+cs.CL --top_retrieve 10 --enable_llm_rerank true --llm_rerank_backend langflow --langflow_mode local --langflow_flow_id d6280b6b-4d2a-497d-bcbb-9116ca0ba041 --langflow_api_key sk-TpmyAx3mIMmiivJ2tZulONiCg309yMKt91lmlm7XIF4 --langflow_flow_path data/ollama_rerank_agent.json
 ```
-
 Langflow LLM rerank option:
 1) Open Langflow UI and import `llm_rerank_flow.json`
 2) Set the Language Model provider to Ollama (or your choice)
 3) Copy the flow ID and API key
-
 ## Backends
 ### Ollama Backend
 #### Ollama LLM Rerank Prompt
