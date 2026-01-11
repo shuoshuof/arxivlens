@@ -154,11 +154,7 @@ Notes:
 
 ## LLM Rerank
 
-### `backend.llm_rerank.ollama_llm_rerank(overview_text, papers, model, base_url, timeout=90, retries=1)`
-Runs Ollama checks on top candidates and attaches structured results.
-
-### `backend.llm_rerank.langflow_llm_rerank(overview_text, papers, flow_id, base_url, api_key=None, timeout=90, retries=1, mode="local", flow_path=None)`
-Runs a Langflow flow for each top candidate and attaches structured results.
+LLM rerank runs a selected backend and attaches structured results to each top candidate.
 
 For each paper:
 1) Calls the selected backend function.

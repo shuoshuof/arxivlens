@@ -56,3 +56,6 @@ zotero-arxiv-daily/
 
 # Ignore prompt files
 prompts/
+
+# Ignore test
+test

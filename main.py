@@ -208,49 +208,7 @@ if __name__ == "__main__":
         backend = (args.llm_rerank_backend or "ollama").strip().lower()
         handler, spec = load_backend(backend)
         logging.info("Running LLM rerank via %s", backend)
-        if spec.conda_env:
-            current_env = _current_conda_env()
-            if current_env and current_env != spec.conda_env:
-                logging.warning(
-                    "LLM rerank backend '%s' expects conda env '%s' (current: '%s').",
-                    spec.name,
-                    spec.conda_env,
-                    current_env,
-                )
-            elif not current_env:
-                logging.warning(
-                    "LLM rerank backend '%s' expects conda env '%s'. CONDA_DEFAULT_ENV is not set.",
-                    spec.name,
-                    spec.conda_env,
-                )
-
-        if spec.name == "ollama":
-            handler(
-                overview_text,
-                top_retrieve,
-                model=args.ollama_model,
-                base_url=args.ollama_base_url,
-            )
-        elif spec.name == "langflow":
-            langflow_mode = (args.langflow_mode or "local").strip().lower()
-            if langflow_mode == "http" and not args.langflow_flow_id:
-                raise ValueError(
-                    "Missing LLM_RERANK_FLOW_ID. Set --langflow_flow_id or LLM_RERANK_FLOW_ID env."
-                )
-            if langflow_mode == "local" and not args.langflow_flow_path:
-                raise ValueError(
-                    "Missing LANGFLOW_FLOW_PATH. Set --langflow_flow_path or LANGFLOW_FLOW_PATH env."
-                )
-            handler(
-                overview_text,
-                top_retrieve,
-                flow_id=args.langflow_flow_id or "",
-                base_url=args.langflow_base_url,
-                api_key=args.langflow_api_key,
-                mode=langflow_mode,
-                flow_path=args.langflow_flow_path,
-            )
-        elif spec.name == "langchain":
+        if spec.name == "langchain":
             handler(
                 overview_text,
                 top_retrieve,
