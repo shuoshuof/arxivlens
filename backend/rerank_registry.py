@@ -14,17 +14,6 @@ class BackendSpec:
 
 
 _BACKENDS: dict[str, BackendSpec] = {
-    "ollama": BackendSpec(
-        name="ollama",
-        module="backend.ollama_rerank",
-        function="ollama_llm_rerank",
-    ),
-    "langflow": BackendSpec(
-        name="langflow",
-        module="backend.langflow_rerank",
-        function="langflow_llm_rerank",
-        conda_env="arxiv",
-    ),
     "langchain": BackendSpec(
         name="langchain",
         module="backend.langchain_rerank",
