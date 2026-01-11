@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
+from backend.rerank_registry import load_backend
 from utils.arxiv_fetcher import get_arxiv_paper
-from backend.llm_rerank import langflow_llm_rerank, ollama_llm_rerank
 from utils.recommender import rerank_paper
 from utils.web_display import serve_papers
 
@@ -85,6 +85,16 @@ def format_paper_line(paper, rank: int) -> str:
     return "\n".join(lines)
 
 
+def _current_conda_env() -> str:
+    env = os.environ.get("CONDA_DEFAULT_ENV")
+    if env:
+        return env
+    prefix = os.environ.get("CONDA_PREFIX")
+    if not prefix:
+        return ""
+    return os.path.basename(prefix)
+
+
 if __name__ == "__main__":
     load_dotenv(override=True)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -106,7 +116,7 @@ if __name__ == "__main__":
     add_argument(
         "--llm_rerank_backend",
         type=str,
-        help="LLM rerank backend: ollama or langflow",
+        help="LLM rerank backend: ollama, langflow, or langchain",
         default="ollama",
     )
     add_argument(
@@ -119,7 +129,7 @@ if __name__ == "__main__":
         "--ollama_model",
         type=str,
         help="Ollama chat model name",
-        default="qwen2.5:14b",
+        default="qwen2.5:32b",
     )
     add_argument(
         "--langflow_base_url",
@@ -196,15 +206,32 @@ if __name__ == "__main__":
 
     if args.enable_llm_rerank:
         backend = (args.llm_rerank_backend or "ollama").strip().lower()
+        handler, spec = load_backend(backend)
         logging.info("Running LLM rerank via %s", backend)
-        if backend == "ollama":
-            ollama_llm_rerank(
+        if spec.conda_env:
+            current_env = _current_conda_env()
+            if current_env and current_env != spec.conda_env:
+                logging.warning(
+                    "LLM rerank backend '%s' expects conda env '%s' (current: '%s').",
+                    spec.name,
+                    spec.conda_env,
+                    current_env,
+                )
+            elif not current_env:
+                logging.warning(
+                    "LLM rerank backend '%s' expects conda env '%s'. CONDA_DEFAULT_ENV is not set.",
+                    spec.name,
+                    spec.conda_env,
+                )
+
+        if spec.name == "ollama":
+            handler(
                 overview_text,
                 top_retrieve,
                 model=args.ollama_model,
                 base_url=args.ollama_base_url,
             )
-        elif backend == "langflow":
+        elif spec.name == "langflow":
             langflow_mode = (args.langflow_mode or "local").strip().lower()
             if langflow_mode == "http" and not args.langflow_flow_id:
                 raise ValueError(
@@ -214,7 +241,7 @@ if __name__ == "__main__":
                 raise ValueError(
                     "Missing LANGFLOW_FLOW_PATH. Set --langflow_flow_path or LANGFLOW_FLOW_PATH env."
                 )
-            langflow_llm_rerank(
+            handler(
                 overview_text,
                 top_retrieve,
                 flow_id=args.langflow_flow_id or "",
@@ -222,6 +249,13 @@ if __name__ == "__main__":
                 api_key=args.langflow_api_key,
                 mode=langflow_mode,
                 flow_path=args.langflow_flow_path,
+            )
+        elif spec.name == "langchain":
+            handler(
+                overview_text,
+                top_retrieve,
+                model=args.ollama_model,
+                base_url=args.ollama_base_url,
             )
         else:
             raise ValueError(f"Unsupported LLM rerank backend: {backend}")

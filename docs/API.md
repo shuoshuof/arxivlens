@@ -37,7 +37,7 @@ CLI arguments (also read from env by uppercase name):
 - `--arxiv_query` (required if `ARXIV_QUERY` not set)
 - `--top_retrieve` (default `50`)
 - `--enable_llm_rerank` (default `true`)
-- `--llm_rerank_backend` (`ollama` or `langflow`, default `ollama`)
+- `--llm_rerank_backend` (`ollama`, `langflow`, or `langchain`, default `ollama`)
 - `--ollama_base_url` (default `http://localhost:11434`)
 - `--ollama_model` (default `qwen2.5:14b`)
 - `--langflow_base_url` (default `http://localhost:7863`)
@@ -47,6 +47,11 @@ CLI arguments (also read from env by uppercase name):
 - `--langflow_api_key` (optional)
 - `--seed` (optional)
 - `--debug` (flag)
+
+Notes:
+- Langflow rerank expects the `arxiv` conda environment.
+- LangChain rerank expects the `lc` conda environment.
+- LangChain rerank uses SearchApi; set `SEARCHAPI_API_KEY` (or `SEARCHAPI_KEY`) for tool calls.
 
 Functions:
 
