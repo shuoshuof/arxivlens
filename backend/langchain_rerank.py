@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from typing import Any
+
+from pydantic import BaseModel, Field
+from typing import Literal, Any
+
 import json, os
 import logging
 
@@ -24,12 +26,11 @@ from backend.rerank_utils import (
 
 def _build_langchain_agent(cfg):
 
-    @dataclass
-    class ResponseFormat:
+    class ResponseFormat(BaseModel):
         relevant: bool
-        fit_score: float
-        reasons: list[str]
-        action: str
+        fit_score: float = Field(ge=0, le=10)
+        reasons: list[str] = Field(min_length=2, max_length=5)
+        action: Literal["reject", "maybe_read", "shortlist", "clarify"]
         used_search: bool
 
     def _build_llm(llm_cfg):
@@ -73,9 +74,19 @@ def _build_langchain_agent(cfg):
         response_format=ToolStrategy(ResponseFormat),
     )
 
-def _struct_resp2dict(struct_resp) -> dict[str, Any]:
-    sr_dict = asdict(struct_resp)
-    return sr_dict
+
+
+def _struct_resp2dict(struct_resp) -> dict[str, Any] | None:
+    if struct_resp is None:
+        return None
+    if isinstance(struct_resp, dict):
+        return struct_resp
+    if hasattr(struct_resp, "model_dump"):
+        return struct_resp.model_dump()
+    if hasattr(struct_resp, "dict"):
+        return struct_resp.dict()
+    return {"_raw": struct_resp}
+
 
 def langchain_llm_rerank(
     overview_text: str,
@@ -119,7 +130,10 @@ def langchain_llm_rerank(
     for paper in papers:
         context = prompt_template.format(overview=overview_text, title=paper.title, abstract=paper.summary)
         resp = agent.invoke({"messages": [{"role": "user", "content": context}]})
-        structured_response = _struct_resp2dict(resp.get("structured_response"))
+        logging.info("agent resp keys=%s", list(resp.keys()))
+        structured_response = resp.get("structured_response")
+        logging.info("structured_response type=%s value=%s", type(structured_response), structured_response)
+        structured_response = _struct_resp2dict(structured_response)
         logging.info(f"LLM rerank response for {paper.arxiv_id}: {structured_response}")
 
         if structured_response:
