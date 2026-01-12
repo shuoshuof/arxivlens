@@ -161,6 +161,12 @@ if __name__ == "__main__":
         help="Langflow API key (if required)",
         default=None,
     )
+    add_argument(
+        "--port",
+        type=int,
+        help="Port for web server",
+        default=8080,
+    )
     add_argument("--seed", type=int, help="Random seed", default=None)
     parser.add_argument("--debug", action="store_true", help="Debug mode")
     args = parser.parse_args()
@@ -235,4 +241,4 @@ if __name__ == "__main__":
         print(format_paper_line(paper, idx))
         print("")
 
-    serve_papers(display_papers)
+    serve_papers(display_papers,port=args.port)
