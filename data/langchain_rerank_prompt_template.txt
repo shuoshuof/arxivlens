@@ -1,0 +1,6 @@
+Project overview:
+{overview}
+
+Candidate paper:
+Title: {title}
+Abstract: {abstract}

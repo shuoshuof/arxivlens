@@ -34,10 +34,14 @@ def _build_langchain_agent(cfg):
 
     def _build_llm(llm_cfg):
         # TODO: add support for other LLMs if needed, now only deepseek-chat supported
+        if not llm_cfg.get("api_key"):
+            raise ValueError("Missing LLM API key. Set LANGCHAIN_RERANK_LLM_API_KEY in .env.")
         model = ChatOpenAI(**llm_cfg)
         return model
     
     def _build_search_api_tool(tool_cfg: dict):
+        if not tool_cfg.get("api_key"):
+            raise ValueError("Missing search API key. Set LANGCHAIN_RERANK_SEARCH_API_KEY in .env.")
         @tool
         def search_api(query: str) -> str:
             """Search for brief context on a term or retrieve a paper abstract. 2-12 words."""
@@ -84,6 +88,27 @@ def langchain_llm_rerank(
         cfg = json.load(f)
 
     assert type(cfg) is dict
+    prompt_cfg = cfg.get("prompt", {})
+    if "system_path" in prompt_cfg:
+        system_path = prompt_cfg["system_path"]
+        if not os.path.isabs(system_path) and not os.path.exists(system_path):
+            system_path = os.path.join(os.path.dirname(cfg_path), system_path)
+        with open(system_path, "r", encoding="utf-8") as f:
+            prompt_cfg["system"] = f.read().strip()
+    if "template_path" in prompt_cfg:
+        template_path = prompt_cfg["template_path"]
+        if not os.path.isabs(template_path) and not os.path.exists(template_path):
+            template_path = os.path.join(os.path.dirname(cfg_path), template_path)
+        with open(template_path, "r", encoding="utf-8") as f:
+            prompt_cfg["template"] = f.read().strip()
+    cfg["prompt"] = prompt_cfg
+
+    llm_key = os.environ.get("LANGCHAIN_RERANK_LLM_API_KEY")
+    if llm_key:
+        cfg.setdefault("llm", {})["api_key"] = llm_key
+    tool_key = os.environ.get("LANGCHAIN_RERANK_SEARCH_API_KEY")
+    if tool_key and cfg.get("tools", {}).get("search_api"):
+        cfg["tools"]["search_api"]["api_key"] = tool_key
 
     agent = _build_langchain_agent(cfg)
 
@@ -104,4 +129,3 @@ def langchain_llm_rerank(
             logging.warning("LLM rerank failed for %s: no structured response", paper.arxiv_id)
             mark_llm_rerank_failed(paper)
     return papers
-

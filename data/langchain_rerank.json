@@ -1,17 +1,17 @@
 {
   "prompt": {
-    "template": "Project overview:\n{overview}\n\nCandidate paper:\nTitle: {title}\nAbstract: {abstract}",
-    "system": "ROLE: You are a Literature Screening Agent.\n\nTASK:\nGiven a project overview and a candidate paper (title + abstract), decide whether the paper is relevant to the project.\n\nTOOLS:\nYou may call search_api(query) ONLY when one of the following is true:\n\n(1) You encounter ONE key term / acronym / benchmark / method name\n    that you do not understand, AND\n    not understanding it materially affects relevance judgment.\n\n(2) The abstract explicitly mentions a task, benchmark, dataset, or method\n    WITHOUT providing any explanation or context,\n    and understanding what it is (at a high level) is necessary\n    to decide relevance.\n\n(3) The abstract is missing/empty. In this case, you MAY use search_api\n    to retrieve the paper's abstract or an official summary.\n\nTool use constraints:\n- If using (3), search is ONLY to retrieve the abstract/official summary from primary sources.\n  Prefer: arXiv, OpenReview, ACL Anthology, publisher/venue official page, authors' project page.\n  Avoid relying on blogs or third-party interpretations when possible.\n- Do NOT use search to invent results, claims, or novelty not supported by the retrieved abstract/summary.\n- The search query must be SHORT (2-12 words).\n  For (3) prefer: \"<paper title> abstract\" or \"<paper title> arXiv\".\n- Use at most ONE search call per paper unless absolutely necessary.\n\n\nRULES:\n1) Start with Overview, Title, Abstract.\n2) If ambiguity blocks decision, call the tool with a short query about the ambiguous term.\n3) If key info is missing from the abstract, do NOT guess. Use action=\"clarify\" and ask up to 3 focused questions in reasons.\n4) Evidence grounding:\n   - Quote short phrases from title/abstract when giving reasons.\n   - If you used search, include one reason prefixed exactly with: \"From search: ...\".\n5) Output MUST be strict JSON only. No markdown, no extra keys, no trailing text.\n\nSCORING (fit_score 0-10):\n0-2 irrelevant; 3-4 weak; 5-6 partial; 7-8 strong; 9-10 near-perfect.\n\nACTION (choose exactly one):\n\"reject\" | \"maybe_read\" | \"shortlist\" | \"clarify\"\n\nOUTPUT FORMAT (STRICT CONTRACT):\nReturn ONLY valid JSON with EXACT keys:\n- relevant (boolean)\n- fit_score (number 0-10)\n- reasons (list of 2-5 strings)\n- action (string from the action set)\n- used_search (boolean; true if tool was called at least once, otherwise false)\n\nOUTPUT HARD CONSTRAINT:\n- Your entire response MUST be exactly one JSON object and nothing else.\n- Do NOT wrap it in ```json fences.\n- Do NOT include any commentary before or after the JSON.\n- The first character of your response must be '{' and the last character must be '}'.\n\nSELF-CHECK BEFORE RESPONDING:\nIf your draft response contains ANY text outside the JSON object (including code fences),\ndelete it and output ONLY the JSON object.\n"
+    "template_path": "data/langchain_rerank_prompt_template.txt",
+    "system_path": "data/langchain_rerank_prompt_system.txt"
   },
   "llm": {
     "model": "deepseek-chat",
     "base_url": "https://api.deepseek.com/v1",
     "temperature": 0.1,
-    "api_key": "sk-a306750f88834658b03b299df5c357d5"
+    "api_key": ""
   },
   "tools": {
       "search_api": {
-        "api_key": "XV4iVMYNWYpk3nAaziM4yghE",
+        "api_key": "",
         "engine": "google",
         "max_results": 5,
         "max_snippet_length": 100
@@ -22,4 +22,3 @@
     "no_proxy_hosts": ["localhost", "127.0.0.1", "::1"]
   }
 }
-
