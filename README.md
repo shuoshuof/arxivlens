@@ -5,7 +5,7 @@ This repo root contains a minimal demo pipeline to recommend arXiv papers based 
 1) Read `overview.md` as project context
 2) Fetch arXiv candidates (title + abstract)
 3) Embedding rerank via `utils.recommender.rerank_paper`
-4) Optional LLM rerank via Ollama (JSON output) or Langflow (JSON output)
+4) Optional LLM rerank via Ollama, Langflow or LangChain
 5) Print Top-N to terminal
 
 ## Quick Run
