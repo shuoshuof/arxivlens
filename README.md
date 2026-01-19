@@ -1,6 +1,6 @@
-# Overview -> Embedding -> LLM Rerank Demo (CLI)
+# arXivLens
 
-This repo root contains a minimal demo pipeline extracted from `zotero-arxiv-daily`:
+This repo root contains a minimal demo pipeline to recommend arXiv papers based on engineering projects:
 
 1) Read `overview.md` as project context
 2) Fetch arXiv candidates (title + abstract)
@@ -39,7 +39,11 @@ Langflow LLM rerank option:
 #### Langflow flow graph
 ![Langflow LLM Rerank Flow](docs/images/langflow.jpg)
 #### Langflow LLM Rerank Prompt
-[See prompts for details](docs/prompt.md)
+[See prompts for details](docs/langflow_prompt.md)
+
+### LangChain Backend
+#### LangChain LLM Rerank Prompt
+[See prompts for details](docs/langchain_prompt.md)
 
 ## Ouptput Example
 ### CLI Output in terminal:
@@ -119,3 +123,6 @@ Notes:
 - `langflow_rerank_json_http(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1) -> dict`
 - `llm_rerank_json(flow_id, overview, title, abstract, base_url="http://localhost:7863", api_key=None, timeout=90, retries=1, mode="local", flow_path=None) -> dict`
 - Runs a Langflow flow and extracts JSON output.
+
+## References
+- [zotero-arxiv-daily](https://github.com/TideDra/zotero-arxiv-daily)
